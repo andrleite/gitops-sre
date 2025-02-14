@@ -1,0 +1,2 @@
+hostNetwork:
+  enabled: true
