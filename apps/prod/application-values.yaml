@@ -1,0 +1,17 @@
+applications:
+  - name: nginx
+    namespace: nginx
+    repo: https://kubernetes.github.io/ingress-nginx
+    path: ingress-nginx
+    revision: 4.12.0
+    helm:
+      enabled: true
+      additionalManifests: true
+  # - name: metrics-server
+  #   namespace: kube-system
+  #   repo: https://kubernetes-sigs.github.io/metrics-server/
+  #   path: metrics-server
+  #   revision: 3.12.1
+  #   helm:
+  #     enabled: true
+  #     additionalManifests: true
