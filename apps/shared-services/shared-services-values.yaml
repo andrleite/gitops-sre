@@ -1,0 +1,9 @@
+# This values file is for anything generic that you would like to affect all different applications within the test environment.
+
+global:
+  team: sre
+  environment: shared-services
+  annotations:
+    notifications.argoproj.io/subscribe.on-sync-status-unknown.mattermost: 94eboe3m3frsxn5xhhdfjdnrgo
+    notifications.argoproj.io/subscribe.on-health-degraded.mattermost: 94eboe3m3frsxn5xhhdfjdnrgo
+    notifications.argoproj.io/subscribe.on-sync-failed.mattermost: 94eboe3m3frsxn5xhhdfjdnrgo
