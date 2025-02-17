@@ -3,6 +3,7 @@
 global:
   team: sre
   environment: shared-services
+  gitops_repo_url: https://github.com/andrleite/gitops-sre.git
   annotations:
     notifications.argoproj.io/subscribe.on-sync-status-unknown.mattermost: 94eboe3m3frsxn5xhhdfjdnrgo
     notifications.argoproj.io/subscribe.on-health-degraded.mattermost: 94eboe3m3frsxn5xhhdfjdnrgo
