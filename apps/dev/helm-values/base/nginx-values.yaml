@@ -1,0 +1,143 @@
+## nginx configuration
+## Ref: https://github.com/kubernetes/ingress/blob/master/controllers/nginx/configuration.md
+##
+controller:
+  admissionWebhooks:
+    enabled: true
+  enableAnnotationValidations: true
+  ingressClassResource:
+    name: nginx-controller
+  ingressClass: nginx-controller
+  image:
+    pullPolicy: IfNotPresent
+  publishService:
+    enabled: true
+  metrics:
+    enabled: true
+
+  service:
+    annotations:
+      service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "tcp"
+      service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "https"
+      service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: '3600'
+      service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "false"
+      service.beta.kubernetes.io/aws-load-balancer-connection-draining-enabled: "true"
+      service.beta.kubernetes.io/aws-load-balancer-connection-draining-timeout: "300"
+    targetPorts:
+      https: http
+    type: LoadBalancer
+    loadBalancerSourceRanges:
+    - 10.0.0.0/8
+    - 173.245.48.0/20
+    - 103.21.244.0/22
+    - 103.22.200.0/22
+    - 103.31.4.0/22
+    - 141.101.64.0/18
+    - 108.162.192.0/18
+    - 190.93.240.0/20
+    - 188.114.96.0/20
+    - 197.234.240.0/22
+    - 198.41.128.0/17
+    - 162.158.0.0/15
+    - 104.16.0.0/13
+    - 104.24.0.0/14
+    - 172.64.0.0/13
+    - 131.0.72.0/22
+  extraVolumeMounts:
+  ## Additional volumeMounts to the controller main container.
+   - name: cache
+     mountPath: /cache/nginx
+
+  extraVolumes:
+  ## Additional volumes to the controller pod.
+   - name: cache
+     emptyDir: {}
+
+  tolerations:
+    - key: "utilities"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
+
+  config:
+    allow-snippet-annotations: "true"
+    annotations-risk-level: Critical
+    compute-full-forwarded-for: "true"
+    custom-http-errors: "404,403"
+    enable-real-ip: "true"
+    force-ssl-redirect: "true"
+    forwarded-for-header: "CF-Connecting-IP"
+    keep-alive: "3600"
+    proxy-max-temp-file-size: "0"
+    proxy-read-timeout: "3600"
+    proxy-real-ip-cidr: 0.0.0.0/0
+    proxy-send-timeout: "3600"
+    server-snippet: |
+      proxy_intercept_errors on;
+      error_page 410 "https://portal.dev.cloud.mattermost.com/cloud/inactive/wakeup?dns=$host&uri=$request_uri";
+    server-tokens: "false"
+    use-forwarded-headers: "true"
+  resources:
+   limits:
+     cpu: 1000m
+     memory: 1Gi
+   requests:
+     cpu: 100m
+     memory: 100Mi
+
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 200
+    targetMemoryUtilizationPercentage: 200
+
+defaultBackend:
+  enabled: true
+  replicaCount: 2
+  tolerations:
+    - key: "utilities"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
+  image:
+    registry: registry.k8s.io
+    image: ingress-nginx/custom-error-pages
+    tag: "v1.1.1"
+  extraConfigMaps:
+    - name: custom-error-pages
+      labels:
+        type: custom-error
+      data:
+        "404": |
+          <!DOCTYPE html>
+          <html>
+            <head><title>PAGE NOT FOUND</title></head>
+            <body>PAGE NOT FOUND</body>
+          </html>
+        "403": |
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <meta http-equiv="X-UA-Compatible" content="ie=edge">
+              <meta http-equiv="refresh" content="0; url=https://portal.dev.cloud.mattermost.com/cloud/inaccessible" />
+              <title>HTML 5 Boilerplate</title>
+          </head>
+          <body>
+          </body>
+          </html>
+
+  extraVolumes:
+  - name: custom-error-pages
+    configMap:
+     name: custom-error-pages
+     items:
+     - key: "404"
+       path: "404.html"
+     - key: "403"
+       path: "403.html"
+  extraVolumeMounts:
+  - name: custom-error-pages
+    mountPath: /www
